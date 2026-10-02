@@ -1,0 +1,584 @@
+--========================================================--
+-- KING 00 HUB
+-- RAYFIELD + KEY SYSTEM
+-- Para seu próprio jogo no Roblox Studio
+-- LocalScript -> StarterPlayerScripts
+-- Rayfield -> ReplicatedStorage.Rayfield
+--========================================================--
+
+if not game:IsLoaded() then
+	game.Loaded:Wait()
+end
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+--========================================================--
+-- RAYFIELD
+--========================================================--
+
+local Rayfield = require(
+	ReplicatedStorage:WaitForChild("Rayfield")
+)
+
+--========================================================--
+-- CONFIGURAÇÃO
+--========================================================--
+
+local Config = {
+	AimEnabled = false,
+	AimFOV = 180,
+	AimSmooth = 0.15,
+	TeamCheck = true,
+	WallCheck = true,
+	MaxDistance = 500,
+	StickyTarget = false,
+	Prediction = false,
+	PredictionStrength = 0.05,
+
+	ESPEnabled = false,
+	ESPName = true,
+	ESPHealth = true,
+	ESPDistance = true,
+	ESPHighlight = false,
+	ESPMaxDistance = 1000,
+
+	MobileAim = true,
+	Crosshair = true,
+	FOVCircle = true,
+
+	LowPerformance = false,
+	UpdateRate = 30
+}
+
+local CurrentTarget = nil
+
+--========================================================--
+-- KEY
+--========================================================--
+
+local Window = Rayfield:CreateWindow({
+	Name = "KING 00 HUB",
+	LoadingTitle = "KING 00",
+	LoadingSubtitle = "Mobile Training Hub",
+	ConfigurationSaving = {
+		Enabled = true,
+		FolderName = "King00Hub",
+		FileName = "King00Config"
+	},
+	KeySystem = true,
+	KeySettings = {
+		Title = "KING 00 | Key System",
+		Subtitle = "Sistema de acesso",
+		Note = "Digite a Key para continuar",
+		FileName = "King00Key",
+		SaveKey = true,
+		GrabKeyFromSite = false,
+		Key = {
+			"king 00"
+		}
+	}
+})
+
+--========================================================--
+-- AIM TAB
+--========================================================--
+
+local AimTab = Window:CreateTab(
+	"Aimbot",
+	"crosshair"
+)
+
+AimTab:CreateSection("Sistema de Mira")
+
+AimTab:CreateToggle({
+	Name = "Aimbot",
+	CurrentValue = false,
+	Flag = "AimEnabled",
+	Callback = function(Value)
+		Config.AimEnabled = Value
+
+		if not Value then
+			CurrentTarget = nil
+		end
+	end
+})
+
+AimTab:CreateSlider({
+	Name = "FOV",
+	Range = {25, 600},
+	Increment = 5,
+	Suffix = " px",
+	CurrentValue = 180,
+	Flag = "AimFOV",
+	Callback = function(Value)
+		Config.AimFOV = Value
+	end
+})
+
+AimTab:CreateSlider({
+	Name = "Smoothness",
+	Range = {0.05, 1},
+	Increment = 0.05,
+	Suffix = "",
+	CurrentValue = 0.15,
+	Flag = "AimSmooth",
+	Callback = function(Value)
+		Config.AimSmooth = Value
+	end
+})
+
+AimTab:CreateSlider({
+	Name = "Distância máxima",
+	Range = {50, 2000},
+	Increment = 50,
+	Suffix = " studs",
+	CurrentValue = 500,
+	Flag = "MaxDistance",
+	Callback = function(Value)
+		Config.MaxDistance = Value
+	end
+})
+
+AimTab:CreateToggle({
+	Name = "Team Check",
+	CurrentValue = true,
+	Flag = "TeamCheck",
+	Callback = function(Value)
+		Config.TeamCheck = Value
+	end
+})
+
+AimTab:CreateToggle({
+	Name = "Wall Check",
+	CurrentValue = true,
+	Flag = "WallCheck",
+	Callback = function(Value)
+		Config.WallCheck = Value
+	end
+})
+
+AimTab:CreateToggle({
+	Name = "Sticky Target",
+	CurrentValue = false,
+	Flag = "StickyTarget",
+	Callback = function(Value)
+		Config.StickyTarget = Value
+
+		if not Value then
+			CurrentTarget = nil
+		end
+	end
+})
+
+AimTab:CreateToggle({
+	Name = "Prediction",
+	CurrentValue = false,
+	Flag = "Prediction",
+	Callback = function(Value)
+		Config.Prediction = Value
+	end
+})
+
+AimTab:CreateSlider({
+	Name = "Prediction Strength",
+	Range = {0, 1},
+	Increment = 0.05,
+	Suffix = "",
+	CurrentValue = 0.05,
+	Flag = "PredictionStrength",
+	Callback = function(Value)
+		Config.PredictionStrength = Value
+	end
+})
+
+--========================================================--
+-- ESP TAB
+--========================================================--
+
+local ESPTab = Window:CreateTab(
+	"ESP",
+	"eye"
+)
+
+ESPTab:CreateSection("Visualização")
+
+ESPTab:CreateToggle({
+	Name = "ESP",
+	CurrentValue = false,
+	Flag = "ESPEnabled",
+	Callback = function(Value)
+		Config.ESPEnabled = Value
+	end
+})
+
+ESPTab:CreateToggle({
+	Name = "Nome",
+	CurrentValue = true,
+	Flag = "ESPName",
+	Callback = function(Value)
+		Config.ESPName = Value
+	end
+})
+
+ESPTab:CreateToggle({
+	Name = "Vida",
+	CurrentValue = true,
+	Flag = "ESPHealth",
+	Callback = function(Value)
+		Config.ESPHealth = Value
+	end
+})
+
+ESPTab:CreateToggle({
+	Name = "Distância",
+	CurrentValue = true,
+	Flag = "ESPDistance",
+	Callback = function(Value)
+		Config.ESPDistance = Value
+	end
+})
+
+ESPTab:CreateToggle({
+	Name = "Highlight",
+	CurrentValue = false,
+	Flag = "ESPHighlight",
+	Callback = function(Value)
+		Config.ESPHighlight = Value
+	end
+})
+
+ESPTab:CreateSlider({
+	Name = "Distância do ESP",
+	Range = {100, 3000},
+	Increment = 100,
+	Suffix = " studs",
+	CurrentValue = 1000,
+	Flag = "ESPMaxDistance",
+	Callback = function(Value)
+		Config.ESPMaxDistance = Value
+	end
+})
+
+--========================================================--
+-- MOBILE TAB
+--========================================================--
+
+local MobileTab = Window:CreateTab(
+	"Mobile",
+	"smartphone"
+)
+
+MobileTab:CreateSection("Controles")
+
+MobileTab:CreateToggle({
+	Name = "Botão de Aim",
+	CurrentValue = true,
+	Flag = "MobileAim",
+	Callback = function(Value)
+		Config.MobileAim = Value
+	end
+})
+
+MobileTab:CreateToggle({
+	Name = "Crosshair",
+	CurrentValue = true,
+	Flag = "Crosshair",
+	Callback = function(Value)
+		Config.Crosshair = Value
+	end
+})
+
+MobileTab:CreateToggle({
+	Name = "FOV Circle",
+	CurrentValue = true,
+	Flag = "FOVCircle",
+	Callback = function(Value)
+		Config.FOVCircle = Value
+	end
+})
+
+--========================================================--
+-- PERFORMANCE
+--========================================================--
+
+local PerformanceTab = Window:CreateTab(
+	"Performance",
+	"gauge"
+)
+
+PerformanceTab:CreateToggle({
+	Name = "Low Performance Mode",
+	CurrentValue = false,
+	Flag = "LowPerformance",
+	Callback = function(Value)
+		Config.LowPerformance = Value
+	end
+})
+
+PerformanceTab:CreateSlider({
+	Name = "Update Rate",
+	Range = {10, 120},
+	Increment = 10,
+	Suffix = " FPS",
+	CurrentValue = 30,
+	Flag = "UpdateRate",
+	Callback = function(Value)
+		Config.UpdateRate = Value
+	end
+})
+
+PerformanceTab:CreateButton({
+	Name = "Resetar configuração",
+	Callback = function()
+
+		Config.AimEnabled = false
+		Config.AimFOV = 180
+		Config.AimSmooth = 0.15
+		Config.TeamCheck = true
+		Config.WallCheck = true
+		Config.MaxDistance = 500
+		Config.StickyTarget = false
+		Config.Prediction = false
+
+		CurrentTarget = nil
+
+		Rayfield:Notify({
+			Title = "KING 00",
+			Content = "Configuração resetada.",
+			Duration = 3
+		})
+	end
+})
+
+--========================================================--
+-- FUNÇÃO: AIM PART
+--========================================================--
+
+local function GetAimPart(Character)
+
+	return Character:FindFirstChild("Head")
+		or Character:FindFirstChild("HumanoidRootPart")
+
+end
+
+--========================================================--
+-- FUNÇÃO: VISIBILIDADE
+--========================================================--
+
+local function IsVisible(Character, Part)
+
+	if not Config.WallCheck then
+		return true
+	end
+
+	local Params = RaycastParams.new()
+
+	Params.FilterType =
+		Enum.RaycastFilterType.Exclude
+
+	Params.FilterDescendantsInstances = {
+		LocalPlayer.Character
+	}
+
+	local Result = workspace:Raycast(
+		Camera.CFrame.Position,
+		Part.Position - Camera.CFrame.Position,
+		Params
+	)
+
+	if not Result then
+		return true
+	end
+
+	return Result.Instance:IsDescendantOf(Character)
+
+end
+
+--========================================================--
+-- FUNÇÃO: ENCONTRAR ALVO
+--========================================================--
+
+local function GetTarget()
+
+	local BestPart = nil
+	local BestDistance = Config.AimFOV
+
+	local Viewport = Camera.ViewportSize
+
+	local Center = Vector2.new(
+		Viewport.X / 2,
+		Viewport.Y / 2
+	)
+
+	for _, Player in ipairs(Players:GetPlayers()) do
+
+		if Player == LocalPlayer then
+			continue
+		end
+
+		if Config.TeamCheck
+			and Player.Team == LocalPlayer.Team then
+			continue
+		end
+
+		local Character = Player.Character
+
+		if not Character then
+			continue
+		end
+
+		local Humanoid =
+			Character:FindFirstChildOfClass("Humanoid")
+
+		if not Humanoid
+			or Humanoid.Health <= 0 then
+			continue
+		end
+
+		local Part = GetAimPart(Character)
+
+		if not Part then
+			continue
+		end
+
+		local Distance =
+			(Part.Position -
+				Camera.CFrame.Position).Magnitude
+
+		if Distance > Config.MaxDistance then
+			continue
+		end
+
+		local ScreenPosition, Visible =
+			Camera:WorldToViewportPoint(
+				Part.Position
+			)
+
+		if not Visible
+			or ScreenPosition.Z <= 0 then
+			continue
+		end
+
+		if not IsVisible(Character, Part) then
+			continue
+		end
+
+		local ScreenDistance =
+			(
+				Vector2.new(
+					ScreenPosition.X,
+					ScreenPosition.Y
+				) - Center
+			).Magnitude
+
+		if ScreenDistance < BestDistance then
+
+			BestDistance = ScreenDistance
+			BestPart = Part
+
+		end
+	end
+
+	return BestPart
+end
+
+--========================================================--
+-- AIM LOOP
+--========================================================--
+
+local Timer = 0
+
+RunService.RenderStepped:Connect(function(DeltaTime)
+
+	Timer += DeltaTime
+
+	local Rate =
+		1 / math.max(Config.UpdateRate, 1)
+
+	if Timer < Rate then
+		return
+	end
+
+	Timer = 0
+
+	if not Config.AimEnabled then
+		CurrentTarget = nil
+		return
+	end
+
+	if not Config.StickyTarget
+		or not CurrentTarget then
+
+		CurrentTarget = GetTarget()
+
+	end
+
+	if not CurrentTarget then
+		return
+	end
+
+	if not CurrentTarget.Parent then
+		CurrentTarget = nil
+		return
+	end
+
+	local Character =
+		CurrentTarget.Parent
+
+	local Humanoid =
+		Character:FindFirstChildOfClass("Humanoid")
+
+	if not Humanoid
+		or Humanoid.Health <= 0 then
+
+		CurrentTarget = nil
+		return
+	end
+
+	local Position =
+		CurrentTarget.Position
+
+	if Config.Prediction then
+
+		local Root =
+			Character:FindFirstChild(
+				"HumanoidRootPart"
+			)
+
+		if Root then
+
+			Position +=
+				Root.AssemblyLinearVelocity
+				* Config.PredictionStrength
+
+		end
+	end
+
+	local TargetCFrame =
+		CFrame.lookAt(
+			Camera.CFrame.Position,
+			Position
+		)
+
+	Camera.CFrame =
+		Camera.CFrame:Lerp(
+			TargetCFrame,
+			Config.AimSmooth
+		)
+
+end)
+
+--========================================================--
+-- NOTIFICAÇÃO
+--========================================================--
+
+Rayfield:Notify({
+	Title = "KING 00 HUB",
+	Content = "Hub carregado com sucesso.",
+	Duration = 4
+})
